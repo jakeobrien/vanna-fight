@@ -7,6 +7,7 @@ import User from './User.js'
 import PlayerView from './Containers/PlayerView.js'
 import HostView from './Containers/HostView.js'
 import AppState from './AppState'
+import phrases from './phrases'
 
 class App extends Component {
 
@@ -20,11 +21,13 @@ class App extends Component {
         this.cancelGame = this.cancelGame.bind(this);
         this.endGame = this.endGame.bind(this);
         this.playLetter = this.playLetter.bind(this);
+        this.playedWordIndices = [];
         this.state = {
             appState: 0,
             hasHost: false,
             currentTeamPlacement: 1,
             currentWord: "",
+            currentWordLength: 0,
             lastWinner: 1,
             team1Score: 0,
             team2Score: 1,
@@ -69,6 +72,9 @@ class App extends Component {
         this.rootRef.child("team1Score").on("value", snap => {
             this.setState({team1Score: snap.val()});
         });
+        this.rootRef.child("currentWordLength").on("value", snap => {
+            this.setState({currentWordLength: snap.val()});
+        });
         this.rootRef.child("team2Score").on("value", snap => {
             this.setState({team2Score: snap.val()});
         });
@@ -108,9 +114,10 @@ class App extends Component {
         this.user.nameChanged = () => this.setState((prevState, props) => ({
             user: {...prevState.user, name: this.user.name}
         }));
-        this.user.isHostChanged = () => this.setState((prevState, props) => ({
-            user: {...prevState.user, isHost: this.user.isHost}
-        }));
+        this.user.isHostChanged = () => {
+            if (this.user.isHost) this.sortPhrases();
+            this.setState((prevState, props) => ({ user: {...prevState.user, isHost: this.user.isHost} }));
+        };
         this.user.lettersChanged = () => this.setState((prevState, props) => ({
             user: {...prevState.user, letters: this.user.letters}
         }));
@@ -144,13 +151,14 @@ class App extends Component {
       let word = this.getWord(numberPlayersPerTeam);
       firebase.database().ref().child("app-state").set(AppState.Playing);
       this.setState({currentWord: word});
-      // firebase.database().ref().child("currentWord").set(word);
+      firebase.database().ref().child("currentWordLength").set(word.length);
       firebase.database().ref().child("lastWinner").set(0);
       firebase.database().ref().child("team1Word").set("");
       firebase.database().ref().child("team2Word").set("");
 
-      let team1Scrambled = this.shuffle(word);
-      let team2Scrambled = this.shuffle(word);
+      let noSpaces = word.replace(/ /g, "");
+      let team1Scrambled = this.shuffle(noSpaces);
+      let team2Scrambled = this.shuffle(noSpaces);
       for (var i = 0; i <numberPlayersPerTeam; i++) {
         var letter1 = team1Scrambled[i];
         var letter2 = team2Scrambled[i];
@@ -161,11 +169,27 @@ class App extends Component {
       }
     }
 
+    sortPhrases() {
+      this.sortedPhrases = {};
+      phrases.forEach(sortPhrases => {
+        let count = sortPhrases.replace(/ /g, "").length.toString();
+        if (this.sortedPhrases[count] === undefined) this.sortedPhrases[count] = [];
+        this.sortedPhrases[count].push(sortPhrases);
+      });
+      console.log(this.sortedPhrases);
+    }
+
     getWord(count) {
       // remove spaces
-      let word = "be";
-      let noSpaces = word.replace(/ /g, "");
-      return noSpaces;
+      let words = this.sortedPhrases[count.toString()];
+      let availableIndices = [];
+      for (var i = 0; i < words.length; i++) {
+        if (!this.playedWordIndices.includes(i)) availableIndices.push(i);
+      }
+      let index = availableIndices[Math.floor(Math.random()*availableIndices.length)];
+      let word = words[index];
+      this.playedWordIndices.push(index);
+      return word.toUpperCase();
     }
 
     cancelGame() {
@@ -214,27 +238,46 @@ class App extends Component {
       // if (this.state.user.isLoggedIn || this.state.user.isHost) return;
       let isOnTeam1 = this.state.team1Players[this.user.uid] !== undefined;
       let isOnTeam2 = this.state.team2Players[this.user.uid] !== undefined;
+      var newWord;
       if (isOnTeam1) {
-        let newWord = this.state.team1Word + letter;
-        // this.setState({team1Word: newWord});
+        if (this.isLastLetter(this.state.team1Word, letter)) {
+          newWord = this.deleteLastLetter(this.state.team1Word);
+        } else {
+          if (this.state.team1Word.length >= this.state.currentWordLength) return;
+          newWord = this.state.team1Word + letter;
+        }
         firebase.database().ref().child("team1Word").set(newWord);
       }
       if (isOnTeam2) {
-        let newWord = this.state.team2Word + letter;
-        // this.setState({team2Word: newWord});
+        if (this.isLastLetter(this.state.team2Word, letter)) {
+          newWord = this.deleteLastLetter(this.state.team2Word);
+        } else {
+          if (this.state.team2Word.length >= this.state.currentWordLength) return;
+          newWord = this.state.team2Word + letter;
+        }
         firebase.database().ref().child("team2Word").set(newWord);
       }
     }
 
+    deleteLastLetter(word) {
+      return word.substr(0, word.length - 1);
+    }
+
+    isLastLetter(word, letter) {
+      if (word === undefined || word.length === 0) return false;
+      return (word[word.length-1] === letter);
+    }
+
     checkForRoundWon() {
       if (!this.state.user.isHost) return;
-      if (this.state.team1Word === this.state.currentWord) {
+      let noSpaces = this.state.currentWord.replace(/ /g, "");
+      if (this.state.team1Word === noSpaces) {
         let newScore = this.state.team1Score + 1;
         firebase.database().ref().child("lastWinner").set(1);
         firebase.database().ref().child("team1Score").set(newScore);
         firebase.database().ref().child("app-state").set(AppState.RoundResults);
       }
-      if (this.state.team2Word === this.state.currentWord) {
+      if (this.state.team2Word === noSpaces) {
         let newScore = this.state.team2Score + 1;
         firebase.database().ref().child("lastWinner").set(2);
         firebase.database().ref().child("team2Score").set(newScore);
@@ -249,12 +292,17 @@ class App extends Component {
         if (this.state.user.isLoggedIn) {
           let isOnTeam1 = this.state.team1Players[this.user.uid] !== undefined;
           let isOnTeam2 = this.state.team2Players[this.user.uid] !== undefined;
+          let teamWord = isOnTeam1 ? this.state.team1Word : this.state.team2Word;
+          let isLastLetter = this.isLastLetter(teamWord, this.state.user.letters);
           let team = 1;
           if (isOnTeam2) team = 2;
           let isJoined = isOnTeam1 || isOnTeam2;
           if (!isJoined) hostStatus = ( <HostStatus hasHost={this.state.hasHost} isHost={this.getIsHost()} onSubmit={this.toggleHost} /> );
           if (this.user.isHost) {
-
+            let numberPerTeam = Math.floor(numberPlayers / 2);
+            let numberWords = 0;
+            let p = this.sortedPhrases[numberPerTeam.toString()];
+            if (p !== undefined) numberWords = p.length;
             main = (
               <HostView numberPlayers={numberPlayers}
                         appState={this.state.appState}
@@ -263,6 +311,8 @@ class App extends Component {
                         team2Score={this.state.team2Score}
                         team1Word={this.state.team1Word}
                         team2Word={this.state.team2Word}
+                        currentWord={this.state.currentWord}
+                        numberWords={numberWords}
                         cancelGame={this.cancelGame}
                         endGame={this.endGame}
                         startGame={this.startGame} /> );
@@ -276,6 +326,7 @@ class App extends Component {
                            team={team}
                            letter={this.state.user.letters}//{this.state.user.letters[this.state.user.letters.length-1]}
                            playLetter={this.playLetter}
+                           isLastLetter={isLastLetter}
                            currentTeamPlacement={this.state.currentTeamPlacement} /> );
           }
         }

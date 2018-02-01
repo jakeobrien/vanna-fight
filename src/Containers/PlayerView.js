@@ -28,12 +28,15 @@ class PlayerView extends Component {
 
     render() {
         let content = null;
+        if (!this.props.isJoined && this.props.appState !== AppState.Joining) {
+            return ( <div>GAME IN PROGRESS. PLEASE WAIT</div> );
+        }
         switch (this.props.appState) {
             case AppState.Joining:
                 if (!this.props.isJoined) {
                     content = (
                         <form onSubmit={this.joinGame}>
-                            <button type="submit" className="button">Join</button>
+                            <button type="submit" className="button">Join Game</button>
                         </form>
                     );
                 } else {
@@ -48,7 +51,7 @@ class PlayerView extends Component {
                     <div>
                     <div>Team {this.props.team}</div>
                     {/* <form onSubmit={this.props.playLetter}> */}
-                        <button onClick={this.props.playLetter} type="submit" className="button" name={this.props.letter}>{this.props.letter}</button>
+                        <button onClick={this.props.playLetter} type="submit" className="button" name={this.props.letter}>{this.props.isLastLetter ? "DELETE " : "ADD "}{this.props.letter}</button>
                     {/* </form> */}
                     </div>
                 );

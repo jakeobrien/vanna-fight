@@ -6,7 +6,23 @@ class HostView extends Component {
 
     constructor() {
         super();
+        this.getWordMask = this.getWordMask.bind(this);
     }
+
+    getWordMask(targetWord, currentWord) {
+        let mask = "";
+        let c = 0;
+        for (var i = 0; i < targetWord.length; i++) {
+            if (targetWord[i] == " ") mask += " ";
+            else {
+                if (c < currentWord.length) mask += currentWord[c];
+                else mask += "_";
+                c++;
+            }
+        }
+        return mask;
+    }
+
 
     render() {
         let content = null;
@@ -34,6 +50,7 @@ class HostView extends Component {
                 content = (
                     <div>
                         <div>Number Players: {this.props.numberPlayers}</div>
+                        <div>Number Words: {this.props.numberWords}</div>
                         {showStartGame ? startGame : null}
                     </div>
                 );
@@ -41,8 +58,8 @@ class HostView extends Component {
             case AppState.Playing:
                 content = (
                     <div>
-                        <div>TEAM 1: {this.props.team1Word}</div>
-                        <div>TEAM 2: {this.props.team2Word}</div>
+                        <div>TEAM 1: {this.getWordMask(this.props.currentWord, this.props.team1Word)}</div>
+                        <div>TEAM 2: {this.getWordMask(this.props.currentWord, this.props.team2Word)}</div>
                     </div>
                 );
                 break;
@@ -50,7 +67,8 @@ class HostView extends Component {
                 content = (
                     <div>
                     <div>TEAM {this.props.teamWon} WON THE ROUND!</div>
-                    <div>Score:</div>
+                    <div>The word was: {this.props.currentWord}</div>
+                    <div>Score</div>
                     <div>Team 1:{this.props.team1Score}</div>
                     <div>Team 2:{this.props.team2Score}</div>
                     <div>{startGame}</div>
