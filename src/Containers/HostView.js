@@ -13,12 +13,13 @@ class HostView extends Component {
         let mask = "";
         let c = 0;
         for (var i = 0; i < targetWord.length; i++) {
-            if (targetWord[i] == " ") mask += " ";
+            if (targetWord[i] == " ") mask += "  ";
             else {
                 if (c < currentWord.length) mask += currentWord[c];
                 else mask += "_";
                 c++;
             }
+            mask += " ";
         }
         return mask;
     }
@@ -58,8 +59,8 @@ class HostView extends Component {
             case AppState.Playing:
                 content = (
                     <div>
-                        <div>TEAM 1: {this.getWordMask(this.props.currentWord, this.props.team1Word)}</div>
-                        <div>TEAM 2: {this.getWordMask(this.props.currentWord, this.props.team2Word)}</div>
+                        <div className="puzzle">TEAM 1 <span className="word">{this.getWordMask(this.props.currentWord, this.props.team1Word)}</span></div>
+                        <div className="puzzle">TEAM 2 <span className="word">{this.getWordMask(this.props.currentWord, this.props.team2Word)}</span></div>
                     </div>
                 );
                 break;

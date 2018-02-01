@@ -29,29 +29,29 @@ class PlayerView extends Component {
     render() {
         let content = null;
         if (!this.props.isJoined && this.props.appState !== AppState.Joining) {
-            return ( <div>GAME IN PROGRESS. PLEASE WAIT</div> );
+            return ( <div>game in progress. please wait</div> );
         }
         switch (this.props.appState) {
             case AppState.Joining:
                 if (!this.props.isJoined) {
                     content = (
                         <form onSubmit={this.joinGame}>
-                            <button type="submit" className="button">Join Game</button>
+                            <button type="submit" className="button">JOIN GAME</button>
                         </form>
                     );
                 } else {
-                    content = ( <div><div>Team {this.props.team}</div><div>Waiting for game to start...</div></div> );
+                    content = ( <div><div>Team {this.props.team}</div><div>waiting for game to start...</div></div> );
                 }
                 break;
             case AppState.StartingRound:
-                content = ( <div><div>Team {this.props.team}</div><div>Waiting for game to start...</div></div> );
+                content = ( <div><div>Team {this.props.team}</div><div>waiting for game to start...</div></div> );
                 break;
             case AppState.Playing:
                 content = (
                     <div>
-                    <div>Team {this.props.team}</div>
+                    <div>TEAM {this.props.team}</div>
                     {/* <form onSubmit={this.props.playLetter}> */}
-                        <button onClick={this.props.playLetter} type="submit" className="button" name={this.props.letter}>{this.props.isLastLetter ? "DELETE " : "ADD "}{this.props.letter}</button>
+                        <button className={this.props.isLastLetter ? "del-letter" : "letter"} onClick={this.props.playLetter} type="submit" name={this.props.letter}>{this.props.letter}</button>
                     {/* </form> */}
                     </div>
                 );

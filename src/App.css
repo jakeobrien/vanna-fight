@@ -1,4 +1,4 @@
-.App {
+ gg .App {
   text-align: center;
 }
 
@@ -16,6 +16,38 @@
 
 .App-title {
   font-size: 1.5em;
+}
+
+div {
+  padding: 10px;
+  text-align: center;
+  font-size: 14pt;
+}
+
+button.letter {
+  font-size: 50pt;
+}
+
+button.del-letter {
+  font-size: 50pt;
+  color: #fff;
+  background-color: #900;
+}
+
+button {
+  padding: 14px;
+  font-size: 15pt;
+  background-color: #eee;
+  border: 1px solid #222;
+}
+
+.puzzle {
+  font-size: 22pt;
+  color: #999;
+}
+.puzzle .word {
+  font-size: 36pt;
+  color: #333
 }
 
 .App-intro {
