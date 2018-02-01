@@ -2,7 +2,9 @@ import Auth from './Auth.js';
 import * as firebase from 'firebase';
 
 const DefaultUser = {
-    name: ""
+    name: "",
+    isHost: false,
+    letters: ""
 };
 
 class User {
@@ -16,6 +18,7 @@ class User {
         this.rootRef = firebase.database().ref();
         this.usersRef = this.rootRef.child("users");
         this.userRef = null;
+        this.uid = null;
     }
 
     signIn() {
@@ -36,8 +39,26 @@ class User {
         if (this.nameChanged) this.nameChanged();
     }
 
+    setIsHost(isHost) {
+        this.isHost = isHost;
+        if (this.isHostChanged) this.isHostChanged();
+    }
+
+    setLetters(letters) {
+        this.letters = letters;
+        if (this.lettersChanged) this.lettersChanged();
+    }
+
+    pushLetters(letters) {
+        this.userRef.child("letters").set(letters);
+    }
+
     pushName(name) {
         this.userRef.child("name").set(name);
+    }
+
+    pushIsHost(isHost) {
+        this.userRef.child("isHost").set(isHost);
     }
 
     authStateChanged() {
@@ -54,9 +75,16 @@ class User {
             if (!snap.hasChild(this.auth.uid)) {
                 this.usersRef.child(this.auth.uid).set(DefaultUser);
             }
+            this.uid = this.auth.uid;
             this.userRef = this.usersRef.child(this.auth.uid);
             this.userRef.child("name").on("value", snap => {
                 this.setName(snap.val());
+            });
+            this.userRef.child("isHost").on("value", snap => {
+                this.setIsHost(snap.val());
+            });
+            this.userRef.child("letters").on("value", snap => {
+                this.setLetters(snap.val());
             });
         });
     }

@@ -11,7 +11,6 @@ class Auth {
     }
 
     setStateForUser(user) {
-        console.log("auth user: " + (user !== null));
         if (user && this.uid === null) {
             this.uid = user.uid;
             this.isLoggedIn = true;
