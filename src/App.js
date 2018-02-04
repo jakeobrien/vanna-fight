@@ -19,6 +19,8 @@ class App extends Component {
         this.setHasHost = this.setHasHost.bind(this);
         this.startGame = this.startGame.bind(this);
         this.cancelGame = this.cancelGame.bind(this);
+        this.restartGame = this.restartGame.bind(this);
+        this.deleteAllUsers = this.deleteAllUsers.bind(this);
         this.endGame = this.endGame.bind(this);
         this.playLetter = this.playLetter.bind(this);
         this.playedWordIndices = [];
@@ -42,7 +44,7 @@ class App extends Component {
                 isHost: false,
                 isLoggedIn: false,
                 letters: "",
-                playedLetterIndices: []
+                hasPlayed: false
             }
         };
     }
@@ -114,6 +116,9 @@ class App extends Component {
         this.user.nameChanged = () => this.setState((prevState, props) => ({
             user: {...prevState.user, name: this.user.name}
         }));
+        this.user.hasPlayedChanged = () => this.setState((prevState, props) => ({
+            user: {...prevState.user, hasPlayed: this.user.hasPlayed}
+        }));
         this.user.isHostChanged = () => {
             if (this.user.isHost) this.sortPhrases();
             this.setState((prevState, props) => ({ user: {...prevState.user, isHost: this.user.isHost} }));
@@ -165,7 +170,9 @@ class App extends Component {
         var user1 = Object.keys(this.state.team1Players)[i];
         var user2 = Object.keys(this.state.team2Players)[i];
         firebase.database().ref().child("users").child(user1).child("letters").set(letter1);
+        firebase.database().ref().child("users").child(user1).child("hasPlayed").set(false);
         firebase.database().ref().child("users").child(user2).child("letters").set(letter2);
+        firebase.database().ref().child("users").child(user2).child("hasPlayed").set(false);
       }
     }
 
@@ -194,7 +201,6 @@ class App extends Component {
 
     cancelGame() {
       firebase.database().ref().child("app-state").set(AppState.Joining);
-      firebase.database().ref().child("currentWord").set("");
       firebase.database().ref().child("lastWinner").set(0);
       firebase.database().ref().child("team1Score").set(0);
       firebase.database().ref().child("team2Score").set(0);
@@ -202,6 +208,21 @@ class App extends Component {
       firebase.database().ref().child("team2Word").set("");
       firebase.database().ref().child("team1Players").set(0);
       firebase.database().ref().child("team2Players").set(0);
+    }
+
+  deleteAllUsers() {
+    this.cancelGame();
+    firebase.database().ref().child("hasHost").set(false);
+    firebase.database().ref().child("users").set(0);
+  }
+
+    restartGame() {
+      firebase.database().ref().child("app-state").set(AppState.StartingRound);
+      firebase.database().ref().child("lastWinner").set(0);
+      firebase.database().ref().child("team1Score").set(0);
+      firebase.database().ref().child("team2Score").set(0);
+      firebase.database().ref().child("team1Word").set("");
+      firebase.database().ref().child("team2Word").set("");
     }
 
     endGame() {
@@ -239,9 +260,11 @@ class App extends Component {
       let isOnTeam1 = this.state.team1Players[this.user.uid] !== undefined;
       let isOnTeam2 = this.state.team2Players[this.user.uid] !== undefined;
       var newWord;
+      var added = true;
       if (isOnTeam1) {
-        if (this.isLastLetter(this.state.team1Word, letter)) {
+        if (this.state.user.hasPlayed && this.isLastLetter(this.state.team1Word, letter)) {
           newWord = this.deleteLastLetter(this.state.team1Word);
+          added = false;
         } else {
           if (this.state.team1Word.length >= this.state.currentWordLength) return;
           newWord = this.state.team1Word + letter;
@@ -249,14 +272,16 @@ class App extends Component {
         firebase.database().ref().child("team1Word").set(newWord);
       }
       if (isOnTeam2) {
-        if (this.isLastLetter(this.state.team2Word, letter)) {
+        if (this.state.user.hasPlayed && this.isLastLetter(this.state.team2Word, letter)) {
           newWord = this.deleteLastLetter(this.state.team2Word);
+          added = false;
         } else {
           if (this.state.team2Word.length >= this.state.currentWordLength) return;
           newWord = this.state.team2Word + letter;
         }
         firebase.database().ref().child("team2Word").set(newWord);
       }
+      this.user.pushHasPlayed(added);
     }
 
     deleteLastLetter(word) {
@@ -271,13 +296,13 @@ class App extends Component {
     checkForRoundWon() {
       if (!this.state.user.isHost) return;
       let noSpaces = this.state.currentWord.replace(/ /g, "");
-      if (this.state.team1Word === noSpaces) {
+      if (this.state.team1Word !== "" && this.state.team1Word === noSpaces) {
         let newScore = this.state.team1Score + 1;
         firebase.database().ref().child("lastWinner").set(1);
         firebase.database().ref().child("team1Score").set(newScore);
         firebase.database().ref().child("app-state").set(AppState.RoundResults);
       }
-      if (this.state.team2Word === noSpaces) {
+      if (this.state.team2Word !== "" && this.state.team2Word === noSpaces) {
         let newScore = this.state.team2Score + 1;
         firebase.database().ref().child("lastWinner").set(2);
         firebase.database().ref().child("team2Score").set(newScore);
@@ -293,8 +318,9 @@ class App extends Component {
           let isOnTeam1 = this.state.team1Players[this.user.uid] !== undefined;
           let isOnTeam2 = this.state.team2Players[this.user.uid] !== undefined;
           let teamWord = isOnTeam1 ? this.state.team1Word : this.state.team2Word;
-          let isLastLetter = this.isLastLetter(teamWord, this.state.user.letters);
-          let team = 1;
+          let willDelete = this.user.hasPlayed && this.isLastLetter(teamWord, this.state.user.letters);
+          let team = 0;
+          if (isOnTeam1) team = 1;
           if (isOnTeam2) team = 2;
           let isJoined = isOnTeam1 || isOnTeam2;
           if (!isJoined) hostStatus = ( <HostStatus hasHost={this.state.hasHost} isHost={this.getIsHost()} onSubmit={this.toggleHost} /> );
@@ -314,6 +340,8 @@ class App extends Component {
                         currentWord={this.state.currentWord}
                         numberWords={numberWords}
                         cancelGame={this.cancelGame}
+                        restartGame={this.restartGame}
+                        deleteAllUsers={this.deleteAllUsers}
                         endGame={this.endGame}
                         startGame={this.startGame} /> );
           } else {
@@ -326,7 +354,8 @@ class App extends Component {
                            team={team}
                            letter={this.state.user.letters}//{this.state.user.letters[this.state.user.letters.length-1]}
                            playLetter={this.playLetter}
-                           isLastLetter={isLastLetter}
+                           hasPlayed={this.user.hasPlayed}
+                           willDelete={willDelete}
                            currentTeamPlacement={this.state.currentTeamPlacement} /> );
           }
         }

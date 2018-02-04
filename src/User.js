@@ -4,7 +4,8 @@ import * as firebase from 'firebase';
 const DefaultUser = {
     name: "",
     isHost: false,
-    letters: ""
+    letters: "",
+    hasPlayed: false
 };
 
 class User {
@@ -14,6 +15,7 @@ class User {
         this.auth.stateChanged = this.authStateChanged.bind(this);
         this.isLoggedIn = this.auth.isLoggedIn;
         this.name = "";
+        this.hasPlayed = false;
         this.isHost = false;
         this.rootRef = firebase.database().ref();
         this.usersRef = this.rootRef.child("users");
@@ -39,6 +41,11 @@ class User {
         if (this.nameChanged) this.nameChanged();
     }
 
+    setHasPlayed(hasPlayed) {
+        this.hasPlayed = hasPlayed;
+        if (this.hasPlayedChanged) this.hasPlayedChanged();
+    }
+
     setIsHost(isHost) {
         this.isHost = isHost;
         if (this.isHostChanged) this.isHostChanged();
@@ -55,6 +62,10 @@ class User {
 
     pushName(name) {
         this.userRef.child("name").set(name);
+    }
+
+    pushHasPlayed(hasPlayed) {
+        this.userRef.child("hasPlayed").set(hasPlayed);
     }
 
     pushIsHost(isHost) {
@@ -80,6 +91,9 @@ class User {
             this.userRef.child("name").on("value", snap => {
                 this.setName(snap.val());
             });
+            this.userRef.child("hasPlayed").on("value", snap => {
+                this.setHasPlayed(snap.val());
+            });
             this.userRef.child("isHost").on("value", snap => {
                 this.setIsHost(snap.val());
             });
@@ -92,6 +106,7 @@ class User {
     clearUser() {
         this.userRef = null;
         this.setName("");
+        this.setHasPlayed(false);
     }
 }
 

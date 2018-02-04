@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 const AuthToggle = ({isLoggedIn, onSubmit}) => {
-    // if (isLoggedIn) return null;
+    if (isLoggedIn) return null;
     var buttonText = isLoggedIn ? "Sign Out" : "Sign In";
     return (
         <div>

@@ -18,10 +18,55 @@
   font-size: 1.5em;
 }
 
+.team1 {
+  background-color: rgb(196, 255, 170);
+}
+
+.team2 {
+  background-color: rgb(170, 222, 255);
+}
+
+.win-announce {
+  font-size:2em;
+  color:#444;
+}
+
+.word-announce {
+  font-size:24pt;
+}
+
+.team {
+  font-weight: bold;
+}
+
+.space {
+  margin: 0 10px 0 10px;
+}
+
+.score {
+  font-size: 18pt;
+  color: #666;
+}
+.score-number {
+  display: block;
+  color: #000;
+  font-size: 50pt;
+  font-weight: bold;
+}
+
+.address {
+  font-size: 2em;
+  color:#00d;
+}
+
 div {
   padding: 10px;
   text-align: center;
   font-size: 14pt;
+}
+
+form {
+  padding: 10px;
 }
 
 button.letter {
@@ -34,6 +79,12 @@ button.del-letter {
   background-color: #900;
 }
 
+button.has-played-letter {
+  font-size: 50pt;
+  color: rgb(50, 50, 50);
+  background-color: rgb(109, 109, 109);
+}
+
 button {
   padding: 14px;
   font-size: 15pt;
@@ -42,12 +93,16 @@ button {
 }
 
 .puzzle {
-  font-size: 22pt;
+  font-size: 18pt;
   color: #999;
 }
 .puzzle .word {
+  font-weight: bold;
+  margin-bottom: 50pt;
   font-size: 36pt;
-  color: #333
+  color: #333;
+  white-space: pre;
+  display:block;
 }
 
 .App-intro {

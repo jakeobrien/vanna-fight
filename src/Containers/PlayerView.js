@@ -40,31 +40,31 @@ class PlayerView extends Component {
                         </form>
                     );
                 } else {
-                    content = ( <div><div>Team {this.props.team}</div><div>waiting for game to start...</div></div> );
+                    content = ( <div><div>TEAM {this.props.team}</div><div>waiting for game to start...</div></div> );
                 }
                 break;
             case AppState.StartingRound:
-                content = ( <div><div>Team {this.props.team}</div><div>waiting for game to start...</div></div> );
+                content = ( <div><div>TEAM {this.props.team}</div><div>waiting for game to start...</div></div> );
                 break;
             case AppState.Playing:
                 content = (
                     <div>
                     <div>TEAM {this.props.team}</div>
                     {/* <form onSubmit={this.props.playLetter}> */}
-                        <button className={this.props.isLastLetter ? "del-letter" : "letter"} onClick={this.props.playLetter} type="submit" name={this.props.letter}>{this.props.letter}</button>
+                        <button className={this.props.willDelete ? "del-letter" : this.props.hasPlayed ? "has-played-letter" : "letter"} onClick={this.props.playLetter} type="submit" name={this.props.letter}>{this.props.letter}</button>
                     {/* </form> */}
                     </div>
                 );
                 break;
             case AppState.RoundResults:
-                content = ( <div><div>Team {this.props.team}</div><div>{this.props.teamWon ? "YOU WON THE ROUND" : "YOU LOST THE ROUND"}</div></div> );
+                content = ( <div><div className="team">Team {this.props.team}</div><div className="win-announce">{this.props.teamWon ? "YOU WON THE ROUND" : "YOU LOST THE ROUND"}</div></div> );
                 break;
             case AppState.GameResults:
-                content = ( <div><div>Team {this.props.team}</div><div>{this.props.teamWon ? "YOU WON THE GAME" : "YOU LOST THE GAME"}</div></div> );
+                content = ( <div><div className="team">Team {this.props.team}</div><div className="win-announce">{this.props.teamWon ? "YOU WON THE GAME" : "YOU LOST THE GAME"}</div></div> );
                 break;
         }
         return (
-            <div>
+            <div className={this.props.team === 1 ? "team1" : this.props.team === 2 ? "team2" : ""}>
                 {content}
             </div>
         );

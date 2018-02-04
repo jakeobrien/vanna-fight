@@ -42,14 +42,26 @@ class HostView extends Component {
                 <button type="submit" className="button">End Game</button>
             </form>
         );
+        let restartGame = (
+            <form onSubmit={this.props.restartGame}>
+                <button type="submit" className="button">Restart Game</button>
+            </form>
+        );
+        let deleteAllUsers = (
+            <form onSubmit={this.props.deleteAllUsers}>
+                <button type="submit" className="button">Delete Users</button>
+            </form>
+        );
         switch (this.props.appState) {
             case AppState.Joining:
                 let showStartGame = false;
+                restartGame = null;
                 if (this.props.numberPlayers >= 2 && this.props.numberPlayers % 2 === 0) {
                     showStartGame = true;
                 }
                 content = (
                     <div>
+                        <div className="address">Go to bit.ly/vanna-fight</div>
                         <div>Number Players: {this.props.numberPlayers}</div>
                         <div>Number Words: {this.props.numberWords}</div>
                         {showStartGame ? startGame : null}
@@ -67,11 +79,18 @@ class HostView extends Component {
             case AppState.RoundResults:
                 content = (
                     <div>
-                    <div>TEAM {this.props.teamWon} WON THE ROUND!</div>
-                    <div>The word was: {this.props.currentWord}</div>
-                    <div>Score</div>
-                    <div>Team 1:{this.props.team1Score}</div>
-                    <div>Team 2:{this.props.team2Score}</div>
+                    <div className="win-announce">TEAM {this.props.teamWon} WON THE ROUND!</div>
+                    <div className="word-announce">The word was: {this.props.currentWord}</div>
+                    <div className="score">TEAM 1 <span className="score-number">{this.props.team1Score}</span></div>
+                    <div className="score">TEAM 2 <span className="score-number">{this.props.team2Score}</span></div>
+                    <div>{startGame}</div>
+                    <div>{endGame}</div>
+                    </div>
+                );
+                break;
+            case AppState.StartingRound:
+                content = (
+                    <div>
                     <div>{startGame}</div>
                     <div>{endGame}</div>
                     </div>
@@ -92,7 +111,9 @@ class HostView extends Component {
         return (
             <div>
                 {content}
+                {restartGame}
                 {cancelGame}
+                {deleteAllUsers}
             </div>
         );
     }
